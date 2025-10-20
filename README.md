@@ -63,6 +63,8 @@ You may also want to check out this online book:
 |5| Sep 29; 30 | [Transport layer](lec/lec6.pptx) | 3.1–3.4
 |6| Oct 6; holiday | [TCP Basics](lec/lec7.pptx) |3.5, 3.6 | RFCs in the ppt
 |7| Oct 13; no class | Midterm | 
+|8| Oct 20; 21 | [Congestion control](lec/lec8.pptx) | 3.5, 3.6 | [BBR](https://github.com/google/bbr)
+|9| Oct 27; 28 | [More on CC](lec/lec9.pptx); <br>[Network layer](lec/lec10.pptx) | 3.7, 4.1, 4.3.1, 4.3.2, 4.3.5 | [DCTCP](https://people.csail.mit.edu/alizadeh/papers/dctcp-sigcomm10.pdf)
 
 
 ### Tutorials and Assignments
@@ -74,10 +76,10 @@ You may also want to check out this online book:
 | 2 | Sep 9 |[Performance metrics](tutorial/T02) | Yicheng |||
 | 3 | Sep 16 | [HTTP](tutorial/T03) | Yicheng |||
 | 4 | Sep 23 | [Select programming](tutorial/T04) ([Recording](https://drive.google.com/file/d/1gocGr0SARpiupDL6Hxlbo5kTqPSpH8pP/view?usp=sharing)) | Yangtao |[Assignment 2]() | 11:59:59 p.m., Sun, Oct. 26th |
-| 5 | Sep 30 | [Video streaming]() | Yangtao |||
+| 5 | Sep 30 | [Video streaming](tutorial/T05) | Yangtao |||
 | 6 | Oct 7 | holiday | | | |
-| 7 | Oct 14 | [HTTP Proxy]() | Yicheng |||
-| 8 | Oct 21 | [TCP]() | Yangtao |||
+| 7 | Oct 14 | [HTTP Proxy](tutorial/T06) | Yicheng |||
+| 8 | Oct 21 | [TCP](tutorial/T07) | Yangtao |||
 | 9 | Oct 28 | [UDP]() | Yicheng |[Assignment 3]() | 11:59:59 p.m., Sun, Nov. 30th|
 | 10 | Nov 4 | [IP Routing]() | Yicheng |||
 | 11 | Nov 11 | [WTP]() | Yangtao |||
@@ -95,6 +97,7 @@ You may also want to check out this online book:
 |5| Sep 30 | [Parallelisms in LLM training](lec/estr/parallelism.pdf) | [Megatron-LM paper](https://arxiv.org/pdf/1909.08053), [code](https://github.com/NVIDIA/Megatron-LM)
 |6| holiday |  |  
 |7| no class | Travel to SOSP'25 
+|8| Oct 20 | [Pantheon: An Arena for CC](https://www.usenix.org/sites/default/files/conference/protected-files/atc18_slides_yan.pdf) | [Pantheon site](https://pantheon.stanford.edu/); [Congestion-control throwdown on HotNets'17](https://www.youtube.com/watch?v=T1DCoNoVvRM&t=1s)
 
 ### ESTR Individual Projects
 - Proposal [1 mark]
