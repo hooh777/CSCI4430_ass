@@ -20,6 +20,7 @@
 #include <sstream>
 #include <cstring>
 #include <random>
+#include <iostream>
 
 // ============================================================================
 // Data Structures
@@ -509,10 +510,10 @@ void handle_client_request(ClientConnection& conn) {
         
         HTTPMessage response;
         parse_http_message(response_header, response);
-        int content_length = response.get_content_length();
-        if (content_length > 0) {
+        int response_content_length = response.get_content_length();
+        if (response_content_length > 0) {
             char buffer[8192];
-            int remaining = content_length;
+            int remaining = response_content_length;
             while (remaining > 0) {
                 int to_read = std::min(remaining, (int)sizeof(buffer));
                 int n = recv(conn.server_fd, buffer, to_read, 0);
@@ -563,10 +564,10 @@ void handle_client_request(ClientConnection& conn) {
             
             HTTPMessage response;
             parse_http_message(response_header, response);
-            int content_length = response.get_content_length();
-            if (content_length > 0) {
+            int response_content_length = response.get_content_length();
+            if (response_content_length > 0) {
                 char buffer[8192];
-                int remaining = content_length;
+                int remaining = response_content_length;
                 while (remaining > 0) {
                     int to_read = std::min(remaining, (int)sizeof(buffer));
                     int n = recv(conn.server_fd, buffer, to_read, 0);
@@ -598,10 +599,10 @@ void handle_client_request(ClientConnection& conn) {
     
     HTTPMessage response;
     parse_http_message(response_header, response);
-    int content_length = response.get_content_length();
-    if (content_length > 0) {
+    int response_content_length = response.get_content_length();
+    if (response_content_length > 0) {
         char buffer[8192];
-        int remaining = content_length;
+        int remaining = response_content_length;
         while (remaining > 0) {
             int to_read = std::min(remaining, (int)sizeof(buffer));
             int n = recv(conn.server_fd, buffer, to_read, 0);
