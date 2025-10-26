@@ -39,6 +39,7 @@ private:
     std::unordered_map<int, Node> nodes_;
     std::unordered_map<int, std::vector<std::pair<int, int>>> graph_;
     std::unordered_map<std::string, int> ip_to_node_id_;
+    
 
 public:
     LoadBalancer(int port, bool geo_mode, bool rr_mode, const std::string& servers_file)
@@ -129,7 +130,7 @@ public:
             }
         }
         
-        // Parse nodes
+        // Parse nodes - FIXED: Handle the actual format with sequential IDs
         for (int i = 0; i < num_nodes; ++i) {
             if (!std::getline(file, line)) {
                 spdlog::error("Unexpected end of file while reading nodes");
@@ -142,13 +143,14 @@ public:
             }
             
             std::istringstream iss(line);
-            int node_id;
-            std::string type, ip;
-            if (iss >> node_id >> type >> ip) {
-                nodes_[node_id] = {type, ip};
+            std::string node_type, ip;
+            if (iss >> node_type >> ip) {
+                // Use sequential node IDs starting from 0
+                int node_id = i;
+                nodes_[node_id] = {node_type, ip};
                 if (ip != "NO_IP") {
                     ip_to_node_id_[ip] = node_id;
-                    spdlog::debug("Mapped IP {} to node ID {} (type: {})", ip, node_id, type);
+                    spdlog::debug("Mapped IP {} to node ID {} (type: {})", ip, node_id, node_type);
                 }
             } else {
                 spdlog::error("Failed to parse node line: '{}'", line);
@@ -198,40 +200,68 @@ public:
         }
         
         spdlog::info("Loaded geographic network with {} nodes and {} links", num_nodes, num_links);
+
+        // Debug: print all mapped IPs and node types
+        spdlog::debug("Network nodes:");
+        for (const auto& [node_id, node] : nodes_) {
+            spdlog::debug("  Node {}: type='{}', ip='{}'", node_id, node.type, node.ip);
+        }
         
-        // Debug: print all mapped IPs
+        // Debug: print all client IPs
+        spdlog::debug("Available client IPs:");
         for (const auto& [ip, node_id] : ip_to_node_id_) {
-            spdlog::debug("IP mapping: {} -> node {}", ip, node_id);
+            spdlog::debug("  IP: {} -> Node: {}", ip, node_id);
+        }
+                
+        // Debug: print the complete graph structure
+        spdlog::debug("Complete graph structure:");
+        for (const auto& [node_id, edges] : graph_) {
+            spdlog::debug("  Node {} connects to:", node_id);
+            for (const auto& edge : edges) {
+                spdlog::debug("    -> Node {} (cost: {})", edge.first, edge.second);
+            }
         }
         
         return true;
     }
     
     std::vector<int> dijkstra(int start) {
-        std::vector<int> dist(nodes_.size() + 1, INT_MAX);
-        std::vector<bool> visited(nodes_.size() + 1, false);
+        // Find the maximum node ID
+        int max_node_id = 0;
+        for (const auto& [node_id, node] : nodes_) {
+            if (node_id > max_node_id) max_node_id = node_id;
+        }
+        
+        std::vector<int> dist(max_node_id + 1, INT_MAX);
+        std::vector<bool> visited(max_node_id + 1, false);
         dist[start] = 0;
         
-        for (size_t i = 1; i <= nodes_.size(); ++i) {
-            int u = -1;
-            for (size_t j = 1; j <= nodes_.size(); ++j) {
-                if (!visited[j] && (u == -1 || dist[j] < dist[u])) {
-                    u = j;
-                }
-            }
+        // Use priority queue for better performance
+        auto cmp = [&](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+            return a.second > b.second;
+        };
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, decltype(cmp)> pq(cmp);
+        pq.push({start, 0});
+        
+        while (!pq.empty()) {
+            int u = pq.top().first;
+            int current_dist = pq.top().second;
+            pq.pop();
             
-            if (dist[u] == INT_MAX) {
-                break;
-            }
-            
+            if (visited[u]) continue;
             visited[u] = true;
             
             if (graph_.find(u) != graph_.end()) {
                 for (const auto& edge : graph_[u]) {
                     int v = edge.first;
                     int weight = edge.second;
-                    if (dist[u] + weight < dist[v]) {
-                        dist[v] = dist[u] + weight;
+                    
+                    if (v <= max_node_id && !visited[v]) {
+                        int new_dist = current_dist + weight;
+                        if (new_dist < dist[v]) {
+                            dist[v] = new_dist;
+                            pq.push({v, new_dist});
+                        }
                     }
                 }
             }
@@ -246,7 +276,7 @@ public:
         // Find the node ID for the client IP
         auto client_it = ip_to_node_id_.find(client_ip);
         if (client_it == ip_to_node_id_.end()) {
-            spdlog::error("Client IP {} not found in network", client_ip);
+            spdlog::warn("Client IP {} not found in network", client_ip);
             return {"", 0};
         }
         
@@ -260,44 +290,49 @@ public:
         int min_distance = INT_MAX;
         int best_server_node = -1;
         
-        for (int node_id = 1; node_id <= static_cast<int>(nodes_.size()); ++node_id) {
-            if (nodes_.find(node_id) != nodes_.end() && 
-                nodes_[node_id].type == "SERVER" && 
-                distances[node_id] < min_distance) {
+        for (const auto& [node_id, node] : nodes_) {
+            if (node.type == "SERVER" && distances[node_id] < min_distance) {
                 min_distance = distances[node_id];
                 best_server_node = node_id;
+                spdlog::debug("Found closer server: node {} with distance {}", node_id, min_distance);
             }
         }
         
-        if (best_server_node == -1) {
-            spdlog::error("No server found in network");
+        // Handle case where multiple servers have same distance
+        if (best_server_node != -1) {
+            // Check if there are multiple servers with the same minimum distance
+            std::vector<int> equidistant_servers;
+            for (const auto& [node_id, node] : nodes_) {
+                if (node.type == "SERVER" && distances[node_id] == min_distance) {
+                    equidistant_servers.push_back(node_id);
+                }
+            }
+            
+            // If multiple servers have same distance, choose the one with lower node ID
+            if (equidistant_servers.size() > 1) {
+                std::sort(equidistant_servers.begin(), equidistant_servers.end());
+                best_server_node = equidistant_servers[0];
+                spdlog::debug("Multiple equidistant servers, choosing node {}", best_server_node);
+            }
+        }
+        
+        if (best_server_node == -1 || min_distance == INT_MAX) {
+            spdlog::error("No reachable SERVER nodes found for client {}", client_ip);
             return {"", 0};
         }
         
         spdlog::debug("Closest server is node {} with distance {}", best_server_node, min_distance);
         
-        // Find the IP and port for the server node
-        // In geographic mode, we need to find a server that connects to this node
-        for (const auto& [node_id, node] : nodes_) {
-            if (node.type == "SERVER") {
-                // For simplicity, assume server nodes have IPs like 10.0.0.X:8000
-                // We'll use the node ID to construct the server address
-                std::string server_ip = "10.0.0." + std::to_string(node_id);
-                int server_port = 8000;
-                
-                // Check if this is the closest server
-                if (node_id == best_server_node) {
-                    spdlog::info("Client {} assigned to server {}:{} (distance: {})", 
-                                client_ip, server_ip, server_port, min_distance);
-                    return {server_ip, server_port};
-                }
-            }
-        }
+        // Return the server IP and default port 8000
+        std::string server_ip = nodes_[best_server_node].ip;
+        int server_port = 8000;
         
-        spdlog::error("Failed to find server details for node {}", best_server_node);
-        return {"", 0};
+        spdlog::info("Client {} assigned to server {}:{} (distance: {})", 
+                    client_ip, server_ip, server_port, min_distance);
+        return {server_ip, server_port};
     }
-    
+
+        
     std::pair<std::string, int> get_next_server_round_robin() {
         if (servers_.empty()) {
             return {"", 0};
@@ -427,50 +462,55 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    cxxopts::Options options("loadBalancer", "Load balancer for video servers");
+    cxxopts::Options options("loadBalancer", "Load balancer for video CDN");
+    
     options.add_options()
-        ("p,port", "Port to listen on", cxxopts::value<int>())
-        ("g,geo", "Use geographic mode", cxxopts::value<bool>()->default_value("false"))
-        ("r,round-robin", "Use round-robin mode", cxxopts::value<bool>()->default_value("false"))
-        ("s,servers", "Servers configuration file", cxxopts::value<std::string>())
-        ("help", "Print help");
+        ("p,port", "Port of the load balancer", cxxopts::value<int>())
+        ("g,geo", "Run in geo mode", cxxopts::value<bool>()->implicit_value("true"))
+        ("r,rr", "Run in round-robin mode", cxxopts::value<bool>()->implicit_value("true"))
+        ("s,servers", "Path to file containing server info", cxxopts::value<std::string>())
+        ("h,help", "Print usage");
     
-    auto result = options.parse(argc, argv);
-    
-    if (result.count("help")) {
+    try {
+        auto result = options.parse(argc, argv);
+        
+        if (result.count("help")) {
+            std::cout << options.help() << std::endl;
+            return 0;
+        }
+        
+        // Error checking
+        if (!result.count("port") || !result.count("servers")) {
+            spdlog::error("Missing required arguments");
+            std::cout << options.help() << std::endl;
+            return 1;
+        }
+        
+        int port = result["port"].as<int>();
+        if (port < 1024 || port > 65535) {
+            spdlog::error("Port must be in range [1024, 65535]");
+            return 1;
+        }
+        
+        bool geo_mode = result.count("geo") > 0;
+        bool rr_mode = result.count("rr") > 0;
+        
+        if (geo_mode == rr_mode) {
+            spdlog::error("Must specify exactly one of --geo or --rr");
+            std::cout << options.help() << std::endl;
+            return 1;
+        }
+        
+        std::string servers_file = result["servers"].as<std::string>();
+        
+        LoadBalancer lb(port, geo_mode, rr_mode, servers_file);
+        lb.run();
+        
+    } catch (const cxxopts::exceptions::exception& e) {
+        spdlog::error("Command line parsing error: {}", e.what());
         std::cout << options.help() << std::endl;
-        return 0;
-    }
-    
-    // Validate arguments
-    if (!result.count("port") || !result.count("servers")) {
-        spdlog::error("Missing required arguments");
-        std::cout << options.help() << std::endl;
         return 1;
     }
-    
-    int port = result["port"].as<int>();
-    bool geo_mode = result["geo"].as<bool>();
-    bool rr_mode = result["round-robin"].as<bool>();
-    std::string servers_file = result["servers"].as<std::string>();
-    
-    if (port < 1024 || port > 65535) {
-        spdlog::error("Port must be in range [1024, 65535]");
-        return 1;
-    }
-    
-    if (!geo_mode && !rr_mode) {
-        spdlog::error("Must specify either --geo or --round-robin");
-        return 1;
-    }
-    
-    if (geo_mode && rr_mode) {
-        spdlog::error("Cannot specify both --geo and --round-robin");
-        return 1;
-    }
-    
-    LoadBalancer lb(port, geo_mode, rr_mode, servers_file);
-    lb.run();
     
     return 0;
 }
