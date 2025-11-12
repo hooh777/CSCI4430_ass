@@ -65,6 +65,10 @@ You may also want to check out this online book:
 |7| Oct 13; no class | Midterm | 
 |8| Oct 20; 21 | [Congestion control](lec/lec8.pptx) | 3.5, 3.6 | [BBR](https://github.com/google/bbr)
 |9| Oct 27; 28 | [More on CC](lec/lec9.pptx); <br>[Network layer](lec/lec10.pptx) | 3.7, 4.1, 4.3.1, 4.3.2, 4.3.5 | [DCTCP](https://people.csail.mit.edu/alizadeh/papers/dctcp-sigcomm10.pdf)
+|10| Nov 3; 4 | [Routing fundamentals](lec/lec11.pptx); <br>[Intra-domain routing](lec/lec12.pptx) | 5.1, 5.2, 5.3 | [How Dijkstra's Algorithm Works](https://www.youtube.com/watch?v=EFg3u_E6eHU)
+|11| Nov 10; 11 | [Intra-domain routing](lec/lec12.pptx); <br>[Inter-domain routing](lec/lec13.pptx) | 5.1, 5.2, 5.3, 5.4 |
+|12| Nov 17; 18 | [Inter-domain routing](lec/lec13.pptx); <br>[SDN](lectures/lec14.pptx) | 4.4, 5.5
+|13| Nov 24; 25 | [Link layer](lectures/lec15.pptx); <br>[Final review](lectures/review.pptx) | 6.1, 6.3, 6.4
 
 
 ### Tutorials and Assignments
@@ -98,10 +102,13 @@ You may also want to check out this online book:
 |6| holiday |  |  
 |7| no class | Travel to SOSP'25 
 |8| Oct 20 | [Pantheon: An Arena for CC](https://www.usenix.org/sites/default/files/conference/protected-files/atc18_slides_yan.pdf) | [Pantheon site](https://pantheon.stanford.edu/); [Congestion-control throwdown on HotNets'17](https://www.youtube.com/watch?v=T1DCoNoVvRM&t=1s)
+|9| Oct 27 | [DCTCP](lec/estr/estr7-dctcp.pptx) | [BBR repo](https://github.com/google/bbr)
+|10| Nov 4 | [NAT & VPN](lec/estr/estr8-vpn.ppt)
+|11| Nov 10 | [Secure BGP](lec/estr/estr9-sbgp.pdf)
 
 ### ESTR Individual Projects
 - Proposal [1 mark]
-  * Due: 23:59, Oct 22, 2025 HKT
+  * Due: 23:59, Oct ~~22~~24, 2025 HKT
   * 1 page, 12-pt Times New Roman, single column, single spacing
   * LaTeX strongly encouraged, using the article class
   * Submit by emailing Henry directly with a title "[ESTR4120] Proposal - Student_name"
@@ -113,6 +120,7 @@ You may also want to check out this online book:
   * 5 pages, 12-pt Times New Roman, single column, single spacing
   * LaTeX strongly encouraged, using the article class
   * Submit by emailing Henry directly with a title "[ESTR4120] Report - Student_name"
+- List of topics is [here](estr.md)
 
 ## Course policies
 - Assignments:
