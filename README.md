@@ -67,8 +67,8 @@ You may also want to check out this online book:
 |9| Oct 27; 28 | [More on CC](lec/lec9.pptx); <br>[Network layer](lec/lec10.pptx) | 3.7, 4.1, 4.3.1, 4.3.2, 4.3.5 | [DCTCP](https://people.csail.mit.edu/alizadeh/papers/dctcp-sigcomm10.pdf)
 |10| Nov 3; 4 | [Routing fundamentals](lec/lec11.pptx); <br>[Intra-domain routing](lec/lec12.pptx) | 5.1, 5.2, 5.3 | [How Dijkstra's Algorithm Works](https://www.youtube.com/watch?v=EFg3u_E6eHU)
 |11| Nov 10; 11 | [Intra-domain routing](lec/lec12.pptx); <br>[Inter-domain routing](lec/lec13.pptx) | 5.1, 5.2, 5.3, 5.4 |
-|12| Nov 17; 18 | [Inter-domain routing](lec/lec13.pptx); <br>[SDN](lectures/lec14.pptx) | 4.4, 5.5
-|13| Nov 24; 25 | [Link layer](lectures/lec15.pptx); <br>[Final review](lectures/review.pptx) | 6.1, 6.3, 6.4
+|12| Nov 17; 18 | [Inter-domain routing](lec/lec13.pptx); <br>[SDN](lec/lec14.pptx) | 4.4, 5.5
+|13| Nov 24; 25 | [Link layer](lec/lec15.pptx); <br>[Final review](lec/review.pptx) | 6.1, 6.3, 6.4
 
 
 ### Tutorials and Assignments
@@ -79,15 +79,15 @@ You may also want to check out this online book:
 | 1 | Sep 2 | [Socket programming](tutorial/T01) | Yicheng | [Assignment 1](assignment/assignment-1) | 11:59:59 p.m., Wed, Sep. 24th |
 | 2 | Sep 9 |[Performance metrics](tutorial/T02) | Yicheng |||
 | 3 | Sep 16 | [HTTP](tutorial/T03) | Yicheng |||
-| 4 | Sep 23 | [Select programming](tutorial/T04) ([Recording](https://drive.google.com/file/d/1gocGr0SARpiupDL6Hxlbo5kTqPSpH8pP/view?usp=sharing)) | Yangtao |[Assignment 2]() | 11:59:59 p.m., Sun, Oct. 26th |
+| 4 | Sep 23 | [Select programming](tutorial/T04) ([Recording](https://drive.google.com/file/d/1gocGr0SARpiupDL6Hxlbo5kTqPSpH8pP/view?usp=sharing)) | Yangtao |[Assignment 2](assignment/assignment-2) | 11:59:59 p.m., Sun, Oct. 26th |
 | 5 | Sep 30 | [Video streaming](tutorial/T05) | Yangtao |||
 | 6 | Oct 7 | holiday | | | |
 | 7 | Oct 14 | [HTTP Proxy](tutorial/T06) | Yicheng |||
 | 8 | Oct 21 | [TCP](tutorial/T07) | Yangtao |||
-| 9 | Oct 28 | [UDP]() | Yicheng |[Assignment 3]() | 11:59:59 p.m., Sun, Nov. 30th|
-| 10 | Nov 4 | [IP Routing]() | Yicheng |||
-| 11 | Nov 11 | [WTP]() | Yangtao |||
-| 12 | Nov 18 | [LS/DV Routing]() | Yangtao |||
+| 9 | Oct 28 | [UDP](tutorial/T08) | Yicheng |[Assignment 3](assignment/assignment-3) | 11:59:59 p.m., Sun, Nov. 30th|
+| 10 | Nov 4 | [IP Routing](tutorial/T09) | Yicheng |||
+| 11 | Nov 11 | [WTP](tutorial/T10) | Yangtao |||
+| 12 | Nov 18 | [LS/DV Routing](tutorial/T11) | Yangtao |||
 | 13 | Nov 25 | [BGP]() | Yangtao |||
 
 ### ESTR Lectures
