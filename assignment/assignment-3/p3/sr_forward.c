@@ -7,26 +7,18 @@
 #include "sr_forward.h"
 #include "sr_arp.h"
 
-// Helper function to calculate IP checksum for sr_ip_hdr (safe version)
+// Helper function to calculate IP checksum for sr_ip_hdr
 uint16_t ip_checksum_sr(struct sr_ip_hdr* ip_hdr) {
     uint32_t sum = 0;
     int header_len = ip_hdr->ip_hl * 4; // IP header length in bytes
+    uint16_t* data = (uint16_t*)ip_hdr;
     
-    // Safe byte-by-byte access to avoid alignment issues
-    uint8_t* data = (uint8_t*)ip_hdr;
-    
-    for (int i = 0; i < header_len; i += 2) {
-        uint16_t word;
-        if (i + 1 < header_len) {
-            // Combine two bytes into a 16-bit word
-            word = (data[i] << 8) | data[i + 1];
-        } else {
-            // Last byte (odd length header)
-            word = (data[i] << 8);
-        }
-        sum += word;
+    // Sum all 16-bit words
+    for (int i = 0; i < header_len / 2; i++) {
+        sum += ntohs(data[i]);
     }
     
+    // Fold 32-bit sum to 16 bits
     while (sum >> 16) {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }

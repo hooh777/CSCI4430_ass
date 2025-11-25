@@ -1,0 +1,36 @@
+Part 2: Bonus Questions on Reliable Transport
+
+================================================================================
+Question 1:
+================================================================================
+Assume that the sliding window size of the sender and the receiver is now 7, 
+and the packet seqNum starts from 1. Among them, packet 3 is lost when sending 
+the first window. No other unreliable situations exist. Please write down the 
+seqNum of the ACKs received by the sender in both WTP base and optimization 
+programs until the 5th packet is received, and the window range after receiving 
+the ACKs.
+
+Answer:
+
+For WTP base:
+* 1st ACK: 3; window: [3 4 5 6 7 8 9]
+* 2nd ACK: 8; window: [8 9 10 11 12 13 14]
+
+For WTP optimization:
+* 1st ACK: 1 2 4 5 6 7; window: [3 4 5 6 7 8 9]
+* 2nd ACK: 3; window: [8 9 10 11 12 13 14]
+
+================================================================================
+Question 2:
+================================================================================
+Assuming that the size of the sliding window of the receiver is 10, the next 
+expected seqNum is 5, and the Packet seqNum currently received in turn is 
+[5 6 7 8 9 10 16 14 11 13]. What are the packets that will be received/buffered 
+in the receiver? Please write down their seqNum in turn for both WTP base and 
+optimization programs.
+
+Answer:
+
+For WTP base: 5 6 7 8 9 10 11 13 14
+
+For WTP optimization: 5 6 7 8 9 10 14 11 13
