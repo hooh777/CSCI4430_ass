@@ -13,7 +13,7 @@ uint16_t ip_checksum_sr(struct sr_ip_hdr* ip_hdr) {
     int header_len = ip_hdr->ip_hl * 4; // IP header length in bytes
     uint16_t* data = (uint16_t*)ip_hdr;
     
-    // Sum all 16-bit words
+    // Sum all 16-bit words in IP header
     for (int i = 0; i < header_len / 2; i++) {
         sum += ntohs(data[i]);
     }
@@ -89,7 +89,27 @@ uint16_t debug_print_packet(uint8_t* buf, int len, const char* iface) {
     return ntohs(eth_hdr->ether_type);
 }
 
-// Main packet handling function
+// Debug function to print routing decision
+void debug_print_routing(struct sr_ip_hdr* ip_hdr, struct sr_rt* best_route) {
+    struct in_addr dst_addr;
+    dst_addr.s_addr = ip_hdr->ip_dst;
+    char dst_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &dst_addr, dst_ip, INET_ADDRSTRLEN);
+    
+    if (best_route) {
+        char route_dest[INET_ADDRSTRLEN], route_mask[INET_ADDRSTRLEN], route_gw[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &best_route->dest, route_dest, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &best_route->mask, route_mask, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &best_route->gw, route_gw, INET_ADDRSTRLEN);
+        
+        printf("[DEBUG ROUTING] Dest: %s -> Route: %s/%s via %s on %s\n", 
+               dst_ip, route_dest, route_mask, route_gw, best_route->interface);
+    } else {
+        printf("[DEBUG ROUTING] Dest: %s -> No route found\n", dst_ip);
+    }
+}
+
+// Main packet handling function - implements simplified IPv4 forwarding
 const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, const char* recv_iface) {
     // Step 1: Basic validation
     if (!packet || !sr || !recv_iface || len <= 0) {
@@ -103,7 +123,7 @@ const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, co
     
     struct sr_ethernet_hdr* eth_hdr = (struct sr_ethernet_hdr*)packet;
     
-    // Only handle IP packets
+    // Only handle IP packets (simplified router - no ARP/ICMP handling)
     if (ntohs(eth_hdr->ether_type) != ethertype_ip) {
         return NULL;
     }
@@ -126,7 +146,8 @@ const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, co
     }
     
     // Verify packet length matches IP total length
-    if (ntohs(ip_hdr->ip_len) > (len - sizeof(struct sr_ethernet_hdr))) {
+    uint16_t ip_total_len = ntohs(ip_hdr->ip_len);
+    if (ip_total_len > (len - sizeof(struct sr_ethernet_hdr))) {
         return NULL;
     }
     
@@ -145,12 +166,12 @@ const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, co
         return NULL; // Invalid checksum, drop packet
     }
     
-    // Check TTL
+    // Check TTL - FIX: Changed back to <= 1 (drop if TTL would expire)
     if (ip_hdr->ip_ttl <= 1) {
-        return NULL; // TTL expired, drop packet
+        return NULL; // TTL would expire, drop packet (no ICMP time exceeded)
     }
     
-    // Step 3: Routing table lookup
+    // Step 3: Routing table lookup with longest prefix match
     if (!sr->routing_table) {
         return NULL; // No routing table
     }
@@ -159,9 +180,14 @@ const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, co
     struct sr_rt* rt_walker = sr->routing_table;
     
     while (rt_walker) {
-        if ((ip_hdr->ip_dst & rt_walker->mask.s_addr) == 
-            (rt_walker->dest.s_addr & rt_walker->mask.s_addr)) {
-            
+        // Check if destination IP matches this route using network mask
+        // All values are in network byte order
+        uint32_t dest_net = ip_hdr->ip_dst & rt_walker->mask.s_addr;
+        uint32_t route_net = rt_walker->dest.s_addr & rt_walker->mask.s_addr;
+        
+        if (dest_net == route_net) {
+            // Found a matching route, check if it's the best (longest prefix)
+            // Compare masks in network byte order (larger mask = longer prefix)
             if (!best_route || 
                 ntohl(rt_walker->mask.s_addr) > ntohl(best_route->mask.s_addr)) {
                 best_route = rt_walker;
@@ -170,35 +196,43 @@ const char* sr_handlepacket(struct sr_instance *sr, uint8_t* packet, int len, co
         rt_walker = rt_walker->next;
     }
     
+    // Debug routing decision
+    debug_print_routing(ip_hdr, best_route);
+    
     if (!best_route) {
-        return NULL; // No route found
+        return NULL; // No route found, drop packet (no ICMP destination unreachable)
     }
     
-    // Step 4: ARP cache lookup
+    // Step 4: ARP cache lookup for next-hop MAC address
     if (!sr->arp_cache) {
         return NULL; // No ARP cache
     }
     
     struct sr_arpcache* arp_entry = find_arp_entry(sr, best_route->gw.s_addr);
     if (!arp_entry) {
-        return NULL; // ARP cache miss
+        return NULL; // ARP cache miss, drop packet (no ARP request handling)
     }
     
     // Step 5: Packet modification for forwarding
     // Decrement TTL
     ip_hdr->ip_ttl--;
     
-    // Update IP checksum
+    // Update IP checksum (must be zeroed before calculation)
     ip_hdr->ip_sum = 0;
     ip_hdr->ip_sum = ip_checksum_sr(ip_hdr);
     
-    // Update Ethernet header
+    // Update Ethernet header for forwarding
+    // Set destination MAC to next-hop's MAC from ARP cache
     memcpy(eth_hdr->ether_dhost, arp_entry->mac_addr, ETH_ALEN);
     
-    // Get source MAC for outgoing interface
+    // Set source MAC to the outgoing interface's MAC
     uint8_t src_mac[ETH_ALEN];
     get_src_mac_by_iface(sr, best_route->interface, src_mac);
     memcpy(eth_hdr->ether_shost, src_mac, ETH_ALEN);
     
+    // Debug TTL after modification
+    printf("[DEBUG TTL] TTL after decrement: %d\n", ip_hdr->ip_ttl);
+    
+    // Return the outgoing interface name for forwarding
     return best_route->interface;
 }
