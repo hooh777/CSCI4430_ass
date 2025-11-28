@@ -1,2 +1,4 @@
 *.o
 sr
+.vscode/
+.DS_Store
