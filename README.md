@@ -88,7 +88,7 @@ You may also want to check out this online book:
 | 10 | Nov 4 | [IP Routing](tutorial/T09) | Yicheng |||
 | 11 | Nov 11 | [WTP](tutorial/T10) | Yangtao |||
 | 12 | Nov 18 | [LS/DV Routing](tutorial/T11) | Yangtao |||
-| 13 | Nov 25 | [BGP]() | Yangtao |||
+| 13 | Nov 25 | [BGP](tutorial/T12) | Yangtao |||
 
 ### ESTR Lectures
 
@@ -117,7 +117,8 @@ You may also want to check out this online book:
   * Schedule to be announced
 - Report [4 marks]
   * Due: 23:59, Dec 2, 2025 HKT
-  * 5 pages, 12-pt Times New Roman, single column, single spacing
+  * 5 pages, 12-pt Times New Roman, single column, single spacing.
+  * References don't count into page limit.
   * LaTeX strongly encouraged, using the article class
   * Submit by emailing Henry directly with a title "[ESTR4120] Report - Student_name"
 - List of topics is [here](estr.md)
